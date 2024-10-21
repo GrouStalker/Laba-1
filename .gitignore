@@ -1,0 +1,248 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+import random
+import pandas as pd
+from scipy import stats
+
+# РћРїСЂРµРґРµР»РµРЅРёРµ Р°Р»РіРѕСЂРёС‚РјРѕРІ СЃРѕСЂС‚РёСЂРѕРІРєРё
+def selection_sort(arr):
+    for i in range(len(arr)):
+        min_idx = i
+        for j in range(i + 1, len(arr)):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr
+
+def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and key < arr[j]:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr
+
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+def merge_sort(arr):
+    if len(arr) > 1:
+        mid = len(arr) // 2
+        L = arr[:mid]
+        R = arr[mid:]
+
+        merge_sort(L)
+        merge_sort(R)
+
+        i = j = k = 0
+        while i < len(L) and j < len(R):
+            if L[i] < R[j]:
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
+
+    return arr
+
+def shell_sort(arr):
+    n = len(arr)
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+            arr[j] = temp
+        gap //= 2
+    return arr
+
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+def heapify(arr, n, i):
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+
+def heap_sort(arr):
+    n = len(arr)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+    for i in range(n - 1, 0, -1):
+        arr[i], arr[0] = arr[0], arr[i]
+        heapify(arr, i, 0)
+    return arr
+
+# Р—Р°РјРµСЂ РІСЂРµРјРµРЅРё СЃРѕСЂС‚РёСЂРѕРІРєРё
+def time_sort(sort_function, data):
+    start_time = time.time()
+    sort_function(data)
+    return time.time() - start_time
+
+# Р“РµРЅРµСЂР°С†РёСЏ СЂР°Р·Р»РёС‡РЅС‹С… С‚РёРїРѕРІ РјР°СЃСЃРёРІРѕРІ
+def generate_arrays(size):
+    sorted_array = list(range(size))
+    almost_sorted_array = sorted_array.copy()
+    for _ in range(int(size * 0.1)):
+        idx1, idx2 = random.sample(range(size), 2)
+        almost_sorted_array[idx1], almost_sorted_array[idx2] = almost_sorted_array[idx2], almost_sorted_array[idx1]
+    reverse_sorted_array = sorted_array[::-1]
+    random_array = [random.randint(0, size) for _ in range(size)]
+    return sorted_array, almost_sorted_array, reverse_sorted_array, random_array
+
+def run_experiments():
+    sizes = [100, 200, 300, 400, 500]  # Р Р°Р·РјРµСЂС‹ РјР°СЃСЃРёРІРѕРІ
+    sort_algorithms = [selection_sort, insertion_sort, bubble_sort, merge_sort, shell_sort, quick_sort, heap_sort]
+    results = {alg.__name__: [] for alg in sort_algorithms}
+
+    # РџРµСЂРµРјРµРЅРЅС‹Рµ РґР»СЏ РѕРїСЂРµРґРµР»РµРЅРёСЏ РЅР°РёР±С‹СЃС‚СЂРµР№С€РµР№ СЃРѕСЂС‚РёСЂРѕРІРєРё
+    fastest_sort_name = None
+    fastest_time = float('inf')
+
+    for size in sizes:
+        sorted_array, almost_sorted_array, reverse_sorted_array, random_array = generate_arrays(size)
+        for sort_algorithm in sort_algorithms:
+            # Р—Р°РјРµСЂ РІСЂРµРјРµРЅРё РґР»СЏ РєР°Р¶РґРѕРіРѕ С‚РёРїР° РјР°СЃСЃРёРІР°
+            sorted_time = time_sort(sort_algorithm, sorted_array.copy())
+            almost_sorted_time = time_sort(sort_algorithm, almost_sorted_array.copy())
+            reverse_sorted_time = time_sort(sort_algorithm, reverse_sorted_array.copy())
+            random_time = time_sort(sort_algorithm, random_array.copy())
+            results[sort_algorithm.__name__].append((sorted_time, almost_sorted_time, reverse_sorted_time, random_time))
+
+            # РћРїСЂРµРґРµР»РµРЅРёРµ РЅР°РёР±С‹СЃС‚СЂРµР№С€РµР№ СЃРѕСЂС‚РёСЂРѕРІРєРё
+            if sorted_time < fastest_time:
+                fastest_time = sorted_time
+                fastest_sort_name = sort_algorithm.__name__
+
+    print(f"\nРќР°РёР±С‹СЃС‚СЂРµР№С€Р°СЏ СЃРѕСЂС‚РёСЂРѕРІРєР°: {fastest_sort_name} СЃ РІСЂРµРјРµРЅРµРј {fastest_time:.6f} СЃРµРєСѓРЅРґ")
+
+    return results
+
+# Р—Р°РїСѓСЃРє СЌРєСЃРїРµСЂРёРјРµРЅС‚РѕРІ
+results = run_experiments()
+
+def plot_results(results):
+    data = []
+    sizes = np.array([100, 200, 300, 400, 500])
+
+    # РћРїСЂРµРґРµР»СЏРµРј РіСЂСѓРїРїС‹ СЃРѕСЂС‚РёСЂРѕРІРѕРє
+    quadratic_sorts = [selection_sort, insertion_sort, bubble_sort]
+    non_quadratic_sorts = [merge_sort, quick_sort, heap_sort, shell_sort]
+
+    for sort_name, timings in results.items():
+        sorted_times, almost_sorted_times, reverse_sorted_times, random_times = zip(*timings)
+        data.append({
+            'РЎРѕСЂС‚РёСЂРѕРІРєР°': sort_name,
+            'РћС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№': np.mean(sorted_times),
+            'РџРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№': np.mean(almost_sorted_times),
+            'РЈР±С‹РІР°СЋС‰РёР№': np.mean(reverse_sorted_times),
+            'РЎР»СѓС‡Р°Р№РЅС‹Р№': np.mean(random_times)
+        })
+
+        # Р РµРіСЂРµСЃСЃРёСЏ РґР»СЏ РѕС†РµРЅРєРё Р°СЃРёРјРїС‚РѕС‚С‹
+        slope, intercept, r_value, p_value, std_err = stats.linregress(sizes, sorted_times)
+        print(f'Р РµРіСЂРµСЃСЃРёСЏ РґР»СЏ {sort_name} (РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№): y = {slope:.5f}x + {intercept:.5f}, RВІ = {r_value**2:.5f}')
+
+    # РЎРѕР·РґР°РЅРёРµ DataFrame Рё РІС‹РІРѕРґ С‚Р°Р±Р»РёС†С‹
+    df = pd.DataFrame(data)
+    print("\nРўР°Р±Р»РёС†Р° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ:")
+    print(df.to_string(index=False))
+
+     # Р“СЂР°С„РёРє РґР»СЏ Р°Р»РіРѕСЂРёС‚РјРѕРІ СЃ РєРІР°РґСЂР°С‚РёС‡РЅРѕР№ Р°СЃРёРјРїС‚РѕС‚РёРєРѕР№ 
+    plt.figure(figsize=(10, 6))
+    for sort_name in quadratic_sorts:
+        timings = results[sort_name.__name__]
+        sorted_times, almost_sorted_times, reverse_sorted_times, random_times = zip(*timings)
+        plt.plot(sizes, sorted_times, label=f'{sort_name.__name__} (РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№)', marker='o')
+        plt.plot(sizes, almost_sorted_times, label=f'{sort_name.__name__} (РїРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№)', marker='x')
+        plt.plot(sizes, reverse_sorted_times, label=f'{sort_name.__name__} (СѓР±С‹РІР°СЋС‰РёР№)', marker='s')
+        plt.plot(sizes, random_times, label=f'{sort_name.__name__} (СЃР»СѓС‡Р°Р№РЅС‹Р№)', marker='^')
+
+    plt.title('Р’СЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РґР»СЏ СЂР°Р·Р»РёС‡РЅС‹С… РјР°СЃСЃРёРІРѕРІ (РєРІР°РґСЂР°С‚РёС‡РЅР°СЏ Р°СЃРёРјРїС‚РѕС‚РёРєР°)')
+    plt.xlabel('Р Р°Р·РјРµСЂ РјР°СЃСЃРёРІР°')
+    plt.ylabel('Р’СЂРµРјСЏ (СЃРµРє.)')
+    plt.legend()
+    plt.grid()
+    plt.savefig('quadratic_sorts_all_times.png')
+    plt.show()
+
+    # Р“СЂР°С„РёРє РґР»СЏ Р°Р»РіРѕСЂРёС‚РјРѕРІ СЃ РЅРµ РєРІР°РґСЂР°С‚РёС‡РЅРѕР№ Р°СЃРёРјРїС‚РѕС‚РёРєРѕР№
+    plt.figure(figsize=(10, 6))
+    for sort_name in non_quadratic_sorts:
+        timings = results[sort_name.__name__]
+        sorted_times, almost_sorted_times, reverse_sorted_times, random_times = zip(*timings)
+        plt.plot(sizes, sorted_times, label=f'{sort_name.__name__} (РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№)', marker='o')
+        plt.plot(sizes, almost_sorted_times, label=f'{sort_name.__name__} (РїРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№)', marker='x')
+        plt.plot(sizes, reverse_sorted_times, label=f'{sort_name.__name__} (СѓР±С‹РІР°СЋС‰РёР№)', marker='s')
+        plt.plot(sizes, random_times, label=f'{sort_name.__name__} (СЃР»СѓС‡Р°Р№РЅС‹Р№)', marker='^')
+
+    plt.title('Р’СЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РґР»СЏ СЂР°Р·Р»РёС‡РЅС‹С… РјР°СЃСЃРёРІРѕРІ (РЅРµ РєРІР°РґСЂР°С‚РёС‡РЅР°СЏ Р°СЃРёРјРїС‚РѕС‚РёРєР°)')
+    plt.xlabel('Р Р°Р·РјРµСЂ РјР°СЃСЃРёРІР°')
+    plt.ylabel('Р’СЂРµРјСЏ (СЃРµРє.)')
+    plt.legend()
+    plt.grid()
+    plt.savefig('non_quadratic_sorts_all_times.png')
+    plt.show()
+
+    for sort_name, timings in results.items():
+        sorted_times, almost_sorted_times, reverse_sorted_times, random_times = zip(*timings)
+        data.append({
+            'РЎРѕСЂС‚РёСЂРѕРІРєР°': sort_name,
+            'РћС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№': np.mean(sorted_times),
+            'РџРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№': np.mean(almost_sorted_times),
+            'РЈР±С‹РІР°СЋС‰РёР№': np.mean(reverse_sorted_times),
+            'РЎР»СѓС‡Р°Р№РЅС‹Р№': np.mean(random_times)
+        })
+
+        # РЎРѕР·РґР°РЅРёРµ РіСЂР°С„РёРєРѕРІ РґР»СЏ РєР°Р¶РґРѕРіРѕ С‚РёРїР° РјР°СЃСЃРёРІР°
+        plt.figure(figsize=(10, 6))
+        plt.plot(sizes, sorted_times, label='РћС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№', marker='o')
+        plt.plot(sizes, almost_sorted_times, label='РџРѕС‡С‚Рё РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Р№', marker='x')
+        plt.plot(sizes, reverse_sorted_times, label='РЈР±С‹РІР°СЋС‰РёР№', marker='s')
+        plt.plot(sizes, random_times, label='РЎР»СѓС‡Р°Р№РЅС‹Р№', marker='^')
+
+        plt.title(f'Р’СЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РґР»СЏ {sort_name}')
+        plt.xlabel('Р Р°Р·РјРµСЂ РјР°СЃСЃРёРІР°')
+        plt.ylabel('Р’СЂРµРјСЏ (СЃРµРє.)')
+        plt.legend()
+        plt.grid()
+        plt.savefig(f'{sort_name}_times.png')  
+        plt.show()
+        
+# Р’С‹Р·РѕРІ С„СѓРЅРєС†РёРё РґР»СЏ РІРёР·СѓР°Р»РёР·Р°С†РёРё СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ
+plot_results(results)
